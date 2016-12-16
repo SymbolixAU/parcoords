@@ -543,6 +543,22 @@ function compute_centroids(row) {
 	return centroids;
 }
 
+pc.compute_real_centroids = function(row) {
+	var realCentroids = [];
+
+	var p = d3.keys(__.dimensions);
+	var cols = p.length;
+	var a = 0.5;
+
+	for (var i = 0; i < cols; ++i) {
+		var x = position(p[i]);
+		var y = __.dimensions[p[i]].yscale(row[p[i]]);
+		realCentroids.push([x, y]);
+	}
+
+	return realCentroids;
+}
+
 function compute_control_points(centroids) {
 
 	var cols = centroids.length;
@@ -697,14 +713,20 @@ function flipAxisAndUpdatePCP(dimension) {
   d3.select(this.parentElement)
     .transition()
       .duration(__.animationTime)
-      .call(axis.scale(__.dimensions[dimension].yscale));
+      .call(axis.scale(__.dimensions[dimension].yscale))
+      .call(axis.orient(__.dimensions[dimension].orient))
+      .call(axis.ticks(__.dimensions[dimension].ticks))
+      .call(axis.innerTickSize(__.dimensions[dimension].innerTickSize))
+      .call(axis.outerTickSize(__.dimensions[dimension].outerTickSize))
+      .call(axis.tickPadding(__.dimensions[dimension].tickPadding))
+      .call(axis.tickFormat(__.dimensions[dimension].tickFormat));
 
   pc.render();
 }
 
 function rotateLabels() {
   if (!__.rotateLabels) return;
-  
+
   var delta = d3.event.deltaY;
   delta = delta < 0 ? -5 : delta;
   delta = delta > 0 ? 5 : delta;
@@ -1045,7 +1067,7 @@ function brushPredicate(predicate) {
 
   predicate = String(predicate).toUpperCase();
   if (predicate !== "AND" && predicate !== "OR") {
-    throw "Invalid predicate " + predicate;
+    throw new Error("Invalid predicate " + predicate);
   }
 
   brush.predicate = predicate;
@@ -1064,7 +1086,7 @@ pc.brushMode = function(mode) {
   }
 
   if (pc.brushModes().indexOf(mode) === -1) {
-    throw "pc.brushmode: Unsupported brush mode: " + mode;
+    throw new Error("pc.brushmode: Unsupported brush mode: " + mode);
   }
 
   // Make sure that we don't trigger unnecessary events by checking if the mode
@@ -1146,7 +1168,7 @@ pc.brushMode = function(mode) {
             return within[__.dimensions[p].type](d,p,dimension);
           });
         default:
-          throw "Unknown brush predicate " + __.brushPredicate;
+          throw new Error("Unknown brush predicate " + __.brushPredicate);
         }
       });
   };
@@ -1332,7 +1354,7 @@ pc.brushMode = function(mode) {
       .attr("stroke-width", 2);
 
     drag
-      .on("drag", function(d, i) { 
+      .on("drag", function(d, i) {
         var ev = d3.event;
         i = i + 1;
         strum["p" + i][0] = Math.min(Math.max(strum.minX + 1, ev.x), strum.maxX);
@@ -1486,7 +1508,7 @@ pc.brushMode = function(mode) {
       case "OR":
         return ids.some(function(id) { return crossesStrum(d, id); });
       default:
-        throw "Unknown brush predicate " + __.brushPredicate;
+        throw new Error("Unknown brush predicate " + __.brushPredicate);
       }
     });
   }
@@ -1688,7 +1710,7 @@ pc.brushMode = function(mode) {
             });
         });
       default:
-        throw "Unknown brush predicate " + __.brushPredicate;
+        throw new Error("Unknown brush predicate " + __.brushPredicate);
       }
     });
   };
@@ -2113,7 +2135,7 @@ pc.brushMode = function(mode) {
       case "OR":
         return ids.some(function(id) { return crossesStrum(d, id); });
       default:
-        throw "Unknown brush predicate " + __.brushPredicate;
+        throw new Error("Unknown brush predicate " + __.brushPredicate);
       }
     });
   }
